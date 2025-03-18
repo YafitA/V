@@ -1,5 +1,7 @@
 // run command: v run main.v
 
+// Yafit Aton & Naomi Belenkiy
+
 import os
 
 struct Totals {
