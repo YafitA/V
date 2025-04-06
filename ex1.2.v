@@ -1,13 +1,13 @@
 // run command: v run main.v
 
 //	Yafit Aton 		211816103
-//	Naomi Belenkiy	
+//	Naomi Belenkiy	212887640
 
 module main
 
 import os
 
-// מבנה שמנהל תוויות ייחודיות לכל סוג פקודה
+// LabelGenerator struct to generate unique labels for arithmetic and logic commands
 struct LabelGenerator {
 mut:
 	eq_count int
@@ -15,7 +15,8 @@ mut:
 	lt_count int
 }
 
-// פונקציה ליצירת שם תווית ייחודי
+// function to generate unique labels for arithmetic and logic commands
+// it takes a base label name and returns a unique label name by appending a count to it
 fn (mut lg LabelGenerator) unique_label(base string) string {
 	match base {
 		"EQ_TRUE", "EQ_END" {
@@ -39,7 +40,7 @@ fn (mut lg LabelGenerator) unique_label(base string) string {
 	}
 }
 
-// מפה שמתרגמת שמות מקטעים לכתובות
+// mapping of segments to their corresponding HACK assembly code
 const segment_map = {
 	"local":    "LCL"
 	"argument": "ARG"
@@ -47,7 +48,8 @@ const segment_map = {
 	"that":     "THAT"
 }
 
-// פונקציה לתרגום פקודת push
+// function to translate push command
+// it takes the segment, index, and file name as arguments and returns the translated code as a string
 fn translate_push(segment string, index string, file_name string) string {
 	match segment {
 		"constant" { return "// push constant ${index}\n@${index}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1" }
@@ -70,7 +72,8 @@ fn translate_push(segment string, index string, file_name string) string {
 	}
 }
 
-// פונקציה לתרגום פקודת pop
+// function to translate pop command
+// it takes the segment, index, and file name as arguments and returns the translated code as a string
 fn translate_pop(segment string, index string, file_name string) string {
 	match segment {
 		"local", "argument", "this", "that" {
@@ -92,36 +95,10 @@ fn translate_pop(segment string, index string, file_name string) string {
 	}
 }
 
-// פונקציה לקריאת קובץ VM ותרגומו לשפת HACK
-fn translate_vm_file(file_path string, mut lg LabelGenerator) !string {
-	lines := os.read_lines(file_path) or { return error("Error reading file $file_path") }
 
-	mut translated_lines := []string{}
-	file_name := os.file_name(file_path).all_before(".vm")
-	translated_lines << "// Translated from $file_path"
-
-	for line in lines {
-		trimmed := line.trim_space()
-		if trimmed.len == 0 || trimmed.starts_with("//") { continue } // דילוג על שורות ריקות והערות
-
-		words := trimmed.split(" ")
-		command := words[0]
-
-		if command == "push" && words.len == 3 {
-			translated_lines << translate_push(words[1], words[2], file_name)
-		} else if command == "pop" && words.len == 3 {
-			translated_lines << translate_pop(words[1], words[2], file_name)
-		} else {
-			translated_lines << translate_command(command, mut lg)
-		}
-	}
-
-	return translated_lines.join("\n")
-}
-
-
-// פונקציה לתרגום פקודות VM לשפת HACK
-fn translate_command(command string, mut lg LabelGenerator) string {
+// function to translate arithmetic and logic commands
+// it takes the command and a mutable LabelGenerator as arguments and returns the translated code as a string
+fn translate_arithmetic_logic(command string, mut lg LabelGenerator) string {
 	match command {
 		"add" { return "// add\n@SP\nAM=M-1\nD=M\nA=A-1\nM=M+D" }
 		"sub" { return "// sub\n@SP\nAM=M-1\nD=M\nA=A-1\nM=M-D" }
@@ -148,7 +125,36 @@ fn translate_command(command string, mut lg LabelGenerator) string {
 	}
 }
 
-// פונקציה ראשית
+// function to translate a VM file to HACK assembly code
+// it reads the VM file, translates each command, and returns the translated code as a string
+fn translate_vm_file(file_path string, mut lg LabelGenerator) !string {
+	lines := os.read_lines(file_path) or { return error("Error reading file $file_path") }
+
+	mut translated_lines := []string{}
+	// file_name for the static variables
+	file_name := os.file_name(file_path).all_before(".vm")
+	translated_lines << "// Translated from $file_path"
+
+	for line in lines {
+		// Ignore empty lines and comments
+		trimmed := line.trim_space()
+		if trimmed.len == 0 || trimmed.starts_with("//") { continue }
+		words := trimmed.split(" ")
+
+		command := words[0]
+
+		if command == "push" && words.len == 3 {
+			translated_lines << translate_push(words[1], words[2], file_name)
+		} else if command == "pop" && words.len == 3 {
+			translated_lines << translate_pop(words[1], words[2], file_name)
+		} else {
+			translated_lines << translate_arithmetic_logic(command, mut lg)
+		}
+	}
+
+	return translated_lines.join("\n")
+}
+
 fn main() {
 	
 	println("Enter the directory path containing VM files:")
@@ -161,11 +167,12 @@ fn main() {
 	}
 
 	// Get all files in the directory
-	vm_files := os.ls(dir_path) or {
+	files := os.ls(dir_path) or {
 		println("Error reading directory.")
 		return
 	}
 	
+	// Output lines to be written to the asm file
 	mut output_lines := []string{}
 
 	// Create the output file 
@@ -173,13 +180,13 @@ fn main() {
 	write_file_path := '${split_path[0]}.asm'
 	output_file := os.join_path(dir_path, write_file_path)
 
-	// Initialize the label generator
+	// Initialize the label generator for unique labels using numbering
 	mut label_gen := LabelGenerator{} 
 
-	for file in vm_files {
+	for file in files {
 		if file.ends_with(".vm") {
-			// Write file name to the file
 			full_path := os.join_path(dir_path, file)
+			// translating the vm file to hack code
 			translated := translate_vm_file(full_path, mut label_gen) or {
 				println("Skipping $file due to an error.")
 				continue
