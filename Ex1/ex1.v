@@ -1,4 +1,4 @@
-// run command: v run main.v
+// run command: v run ex1.v
 
 //	Yafit Aton 		211816103
 //	Naomi Belenkiy	212887640
