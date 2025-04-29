@@ -42,8 +42,14 @@ fn (mut lg LabelGenerator) unique_label(base string) string {
 			lg.lt_count++
 			return label_name
 		}
+		"RETURN_ADDRESS" {
+			label_name := "${base}_${lg.call_count}"
+			lg.call_count++
+			return label_name
+		
+		}
 		else {
-			return "${base}_${lg.call_count}"
+			return "${base}_UNKNOWN"
 		}
 	}
 }
