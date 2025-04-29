@@ -9,8 +9,7 @@ import os
 
 fn bootstrap_code(mut lg LabelGenerator) string {
 	return "// Bootstrap code" +
-			"\n@256\nD=A\n@SP\nM=D" +"
-			\n// call Sys.init 0\n" +
+			"\n@256\nD=A\n@SP\nM=D\n" +
 			translate_function("call", ["Sys.init", "0"], mut lg, "Sys") +
 			"\n// End of bootstrap code\n\n\n"
 			
@@ -18,9 +17,12 @@ fn bootstrap_code(mut lg LabelGenerator) string {
 
 struct LabelGenerator {
 mut:
+	// Logic and arithmetic command counters
 	eq_count int
 	gt_count int
 	lt_count int
+
+	// Call-return command counter
 	call_count int
 }
 
@@ -46,7 +48,6 @@ fn (mut lg LabelGenerator) unique_label(base string) string {
 			label_name := "${base}_${lg.call_count}"
 			lg.call_count++
 			return label_name
-		
 		}
 		else {
 			return "${base}_UNKNOWN"
@@ -145,11 +146,24 @@ fn translate_function(command string, args []string, mut lg LabelGenerator, file
 		"function" {
 			func_name := args[0]
 			num_locals := args[1].int()
-			mut init_locals := []string{}
-			for _ in 0 .. num_locals {
-				init_locals << "@SP\nA=M\nM=0\n@SP\nM=M+1"
-			}
-			return "// function $func_name $num_locals in $file_name\n(${file_name}.${func_name})\n" + init_locals.join("\n")
+			label_loop := "${file_name}.${func_name}.LOOP"
+			label_end := "${file_name}.${func_name}.END"
+			return  "// function ${func_name} ${num_locals}" +
+					"\n(${func_name})" +
+					"\n@${num_locals}" +
+					"\nD=A" +
+					"\n@${label_end}" +
+					"\nD;JEQ" +
+					"\n(${label_loop})" +
+					"\n@SP" +
+					"\nA=M" +
+					"\nM=0" +
+					"\n@SP" +
+					"\nM=M+1" +
+					"\nD=D-1" +
+					"\n@${label_loop}" +
+					"\nD;JNE" +
+					"\n(${label_end})"
 		}
 		"call" {
 			func_name := args[0]
@@ -163,7 +177,8 @@ fn translate_function(command string, args []string, mut lg LabelGenerator, file
 			       "\n@THAT\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1" +
 			       "\n@SP\nD=M\n@$num_args\nD=D-A\n@5\nD=D-A\n@ARG\nM=D" +
 			       "\n@SP\nD=M\n@LCL\nM=D" +
-			       "\n@${file_name}.${func_name}\n0;JMP\n($return_address)"
+			       "\n@${func_name}\n0;JMP"+
+				   "\n($return_address)"
 		}
 		"return" {
 			return "// return\n@LCL\nD=M\n@R13\nM=D" +
