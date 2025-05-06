@@ -10,7 +10,7 @@ import os
 fn bootstrap_code(mut lg LabelGenerator) string {
 	return "// Bootstrap code" +
 			"\n@256\nD=A\n@SP\nM=D\n" +
-			translate_function("call", ["Sys.init", "0"], mut lg, "Sys") +
+			translate_line("call Sys.init 0", mut lg, "Sys") +
 			"\n// End of bootstrap code\n\n\n"
 			
 }
@@ -195,6 +195,25 @@ fn translate_function(command string, args []string, mut lg LabelGenerator, file
 	}
 }
 
+fn translate_line(line string, mut lg LabelGenerator, file_name string) string {
+	words := line.split(" ")
+	command := words[0]
+
+	if command == "push" && words.len == 3 {
+		return translate_push(words[1], words[2], file_name)
+	} else if command == "pop" && words.len == 3 {
+		return translate_pop(words[1], words[2], file_name)
+	} else if command in ["label", "goto", "if-goto"] && words.len == 2 {
+		return translate_program_flow(command, words[1], file_name)
+	} else if command in ["function", "call"] && words.len == 3 {
+		return translate_function(command, words[1..], mut lg, file_name)
+	} else if command == "return" {
+		return translate_function(command, [], mut lg, file_name)
+	} else {
+		return translate_arithmetic_logic(command, mut lg)
+	}
+}
+
 fn translate_vm_file(file_path string, mut lg LabelGenerator) !string {
 	lines := os.read_lines(file_path) or { return error("Error reading file $file_path") }
 
@@ -203,29 +222,14 @@ fn translate_vm_file(file_path string, mut lg LabelGenerator) !string {
 	translated_lines << "// Translated from $file_path"
 
 	for line in lines {
-		mut trimmed := line.trim_space()
-		if trimmed.len == 0 || trimmed.starts_with("//") { continue }
+		mut trimmed_line := line.trim_space()
+		if trimmed_line.len == 0 || trimmed_line.starts_with("//") { continue }
 
-		if trimmed.contains("//") {
-        	trimmed = trimmed.all_before("//").trim_space()
+		if trimmed_line.contains("//") {
+        	trimmed_line = trimmed_line.all_before("//").trim_space()
     	}	
 		
-		words := trimmed.split(" ")
-		command := words[0]
-
-		if command == "push" && words.len == 3 {
-			translated_lines << translate_push(words[1], words[2], file_name)
-		} else if command == "pop" && words.len == 3 {
-			translated_lines << translate_pop(words[1], words[2], file_name)
-		} else if command in ["label", "goto", "if-goto"] && words.len == 2 {
-			translated_lines << translate_program_flow(command, words[1], file_name)
-		} else if command in ["function", "call"] && words.len == 3 {
-			translated_lines << translate_function(command, words[1..], mut lg, file_name)
-		} else if command == "return" {
-			translated_lines << translate_function(command, [], mut lg, file_name)
-		} else {
-			translated_lines << translate_arithmetic_logic(command, mut lg)
-		}
+		translated_lines << translate_line(trimmed_line, mut lg, file_name)
 	}
 
 	return translated_lines.join("\n")
