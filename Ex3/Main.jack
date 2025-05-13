@@ -1,0 +1,208 @@
+
+// מחלקה ראשית להפעלת המצלמה
+class Main {
+    
+
+    function int mainVan() {
+        var Van myVan;
+        var char key;
+        var boolean exit;
+        var int numOfMoves;
+        
+        let myVan = Van.new(150, 50, 120, 60);
+        
+        do myVan.draw();
+        
+        do Output.moveCursor(0, 0);
+        do Output.printString("Arrow keys: move van");
+        do Output.moveCursor(1, 0);
+        do Output.printString("+ : grow van");
+        do Output.moveCursor(2, 0);
+        do Output.printString("- : shrink van");
+        do Output.moveCursor(3, 0);
+        do Output.printString("Q : quit");
+
+        let numOfMoves = 0;
+        let exit = false;
+        
+        // לולאה לטיפול בקלט המשתמש
+        while (~exit) {
+            // קריאת תו מהמקלדת (אם קיים)
+            if (Keyboard.keyPressed() > 0) {
+                let key = Keyboard.keyPressed();
+                
+                if (key = 81) {             // מקש Q - יציאה
+                    let exit = true;
+                }
+                if (key = 131) {            // חץ למעלה
+                    do myVan.move(0, -5);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (key = 133) {            // חץ למטה
+                    do myVan.move(0, 5);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (key = 130) {            // חץ שמאלה
+                    do myVan.move(-5, 0);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (key = 132) {            // חץ ימינה
+                    do myVan.move(5, 0);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (key = 43) {             // מקש + להגדלה
+                    do myVan.resize(10);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (key = 45) {             // מקש - להקטנה
+                    do myVan.resize(-10);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                
+                // המתנה קצרה כדי למנוע תגובות מהירות מדי
+                do Sys.wait(100);
+            }
+        }
+        
+        do myVan.erase();
+        // שחרור זיכרון
+        do myVan.dispose();
+        
+        return numOfMoves;
+    }
+
+    function int mainVideoCamera(){
+        var VideoCamera myVideoCamera;
+        var char userInput;
+        var boolean exit;
+        var int numOfMoves;
+        
+        let myVideoCamera = VideoCamera.new(150, 50, 120, 60);
+        
+        do myVideoCamera.draw();
+
+        do Output.moveCursor(0, 0);
+        do Output.printString("Arrow keys: move VideoCamera");
+        do Output.moveCursor(1, 0);
+        do Output.printString("+ : grow VideoCamera");
+        do Output.moveCursor(2, 0);
+        do Output.printString("- : shrink VideoCamera");
+        do Output.moveCursor(3, 0);
+        do Output.printString("Space : flash");
+        do Output.moveCursor(4, 0);
+        do Output.printString("Q : quit");
+        
+        let numOfMoves = 0;
+        let exit = false;
+        
+        // לולאה לטיפול בקלט המשתמש
+        while (~exit) {
+            // קריאת תו מהמקלדת (אם קיים)
+            if (Keyboard.keyPressed() > 0) {
+                let userInput = Keyboard.keyPressed();
+                
+                if (userInput = 81) {             // מקש Q - יציאה
+                    let exit = true;
+                }
+                if (userInput = 131) {            // חץ למעלה
+                    do myVideoCamera.move(0, -5);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 133) {            // חץ למטה
+                    do myVideoCamera.move(0, 5);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 130) {            // חץ שמאלה
+                    do myVideoCamera.move(-5, 0);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 132) {            // חץ ימינה
+                    do myVideoCamera.move(5, 0);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 43) {             // מקש + להגדלה
+                    do myVideoCamera.resize(10);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 45) {             // מקש - להקטנה
+                    do myVideoCamera.resize(-10);
+                    let numOfMoves = numOfMoves + 1;
+                }
+                if (userInput = 32) {             // מקש רווח להפעלת המבזק
+                    do myVideoCamera.flash();
+                    let numOfMoves = numOfMoves + 1;
+                }
+                
+                // המתנה קצרה כדי למנוע תגובות מהירות מדי
+                do Sys.wait(100);
+            }
+        }
+        
+        do myVideoCamera.erase();
+        // שחרור זיכרון
+        do myVideoCamera.dispose();
+        
+        return numOfMoves;
+    }
+
+
+    function void main() {
+        var VideoCamera myVideoCamera;
+        var Van myVan;
+        var int numOfMoves;
+        var char userInput;
+        var boolean exit;
+        var char objectChoice;
+        
+        let myVideoCamera = VideoCamera.new(80, 100, 100, 80);
+        let myVan = Van.new(220, 100, 120, 60);
+        
+        do myVideoCamera.draw();
+        do myVan.draw();
+
+        do Output.moveCursor(0, 0);
+        do Output.printString("Choose an object:");
+        do Output.moveCursor(1, 0);
+        do Output.printString("1 : VideoCamera");
+        do Output.moveCursor(2, 0);
+        do Output.printString("2 : Van");
+        let objectChoice = Keyboard.keyPressed();
+      
+        while ((~(objectChoice = 49)) & (~(objectChoice = 50))) {
+            let objectChoice = Keyboard.keyPressed();
+        }
+
+        do myVideoCamera.erase();
+        do myVan.erase();
+
+        do myVideoCamera.dispose();
+        do myVan.dispose();
+
+        if (objectChoice = 49) {  // המקש '1'
+            let numOfMoves = Main.mainVideoCamera();
+        }
+        else {
+            if (objectChoice = 50) {  // המקש '2'
+                let numOfMoves = Main.mainVan();
+            }
+        }
+        
+        //clear the screen
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 0, 511, 255);
+
+        do Output.moveCursor(10, 10);
+        do Output.printString("Summary: you selected: ");
+        if (objectChoice = 49) {
+            do Output.printString("VideoCamera");
+        } else {
+            do Output.printString("Van");
+        }
+        do Output.moveCursor(11, 10);
+        do Output.printString("Number of actions performed: ");
+        do Output.printInt(numOfMoves);
+        
+        return;
+        
+    }
+}

@@ -1,0 +1,164 @@
+// קוד JACK לציור מצלמה עם אפשרויות הזזה, הגדלה והקטנה
+class VideoCamera {
+    field int x, y;        // מיקום המצלמה
+    field int width;       // רוחב המצלמה
+    field int height;      // גובה המצלמה
+    field int lensSize;    // גודל העדשה
+    field int minSize;     // גודל מינימלי של המצלמה
+    field int maxSize;     // גודל מקסימלי של המצלמה
+    
+    // בנאי
+    constructor VideoCamera new(int startX, int startY, int camWidth, int camHeight) {
+        let x = startX;
+        let y = startY;
+        let width = camWidth;
+        let height = camHeight;
+        let lensSize = Math.min(width, height) / 3;  // גודל העדשה יחסי לגודל המצלמה
+        let minSize = 30;    // גודל מינימלי של המצלמה
+        let maxSize = 300;   // גודל מקסימלי של המצלמה
+        return this;
+    }
+    
+    // מתודה לציור המצלמה
+    method void draw() {
+        var int buttonWidth, buttonHeight;
+        var int lensX, lensY;
+        
+        // קביעת מימדי הכפתור
+        let buttonWidth = width / 6;
+        let buttonHeight = height / 8;
+        
+        // קביעת מיקום העדשה (במרכז המצלמה)
+        let lensX = x + (width / 2);
+        let lensY = y + (height / 2);
+        
+        // צייר את גוף המצלמה (מלבן)
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        
+        // צייר את הכפתור למעלה
+        do Screen.drawRectangle(x + (width / 2) - (buttonWidth / 2), 
+                              y - buttonHeight, 
+                              x + (width / 2) + (buttonWidth / 2),
+                              y);
+        
+        // צייר את העדשה (עיגול) - באמצע המצלמה
+        do Screen.setColor(false);  // צבע לבן לפנים העדשה
+        do Screen.drawCircle(lensX, lensY, lensSize);
+        
+        return;
+    }
+    
+    // מתודה להזזת המצלמה
+    method void move(int dx, int dy) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // עדכן מיקום
+        let x = x + dx;
+        let y = y + dy;
+        
+        // צייר במיקום החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה להגדלת המצלמה
+    method void grow(int sizeChange) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // בדיקה שהגודל החדש לא יהיה גדול מדי
+        if (((width + sizeChange) < maxSize) & ((height + sizeChange) < maxSize)) {
+            // הגדל את הרוחב והגובה
+            let width = width + sizeChange;
+            let height = height + sizeChange;
+            
+            // עדכן את גודל העדשה בהתאם
+            let lensSize = Math.min(width, height) / 3;
+        }
+        
+        // צייר את המצלמה בגודל החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה להקטנת המצלמה
+    method void shrink(int sizeChange) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // בדיקה שהגודל החדש לא יהיה קטן מדי
+        if (((width - sizeChange) > minSize) & ((height - sizeChange) > minSize)) {
+            // הקטן את הרוחב והגובה
+            let width = width - sizeChange;
+            let height = height - sizeChange;
+            
+            // עדכן את גודל העדשה בהתאם
+            let lensSize = Math.min(width, height) / 3;
+        }
+        
+        // צייר את המצלמה בגודל החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה לשינוי גודל המצלמה (חיובי להגדלה, שלילי להקטנה)
+    method void resize(int sizeChange) {
+        if (sizeChange > 0) {
+            do grow(sizeChange);
+        } else {
+            if (sizeChange < 0) {
+                do shrink(-sizeChange);  // הופך את המספר השלילי לחיובי
+            }
+        }
+        return;
+    }
+    
+    // מתודה למחיקת המצלמה
+    method void erase() {
+        var int buttonWidth, buttonHeight;
+        
+        // קביעת מימדי הכפתור
+        let buttonWidth = width / 6;
+        let buttonHeight = height / 8;
+        
+        do Screen.setColor(false);
+        
+        // מחק את גוף המצלמה כולל שוליים נוספים
+        do Screen.drawRectangle(x - 2, y - buttonHeight - 2, 
+                              x + width + 2, y + height + 2);
+                
+        return;
+    }
+    
+    // מתודה להפעלת מבזק המצלמה
+    method void flash() {
+        var int i;
+        
+        // שמור את מצב המסך הנוכחי
+        do erase();
+        
+        do Screen.setColor(true);
+        do Screen.drawRectangle(0, 0, 511, 255);
+        
+        // המתנה קצרה
+        do Sys.wait(100);
+        
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 0, 511, 255);
+        
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה לשחרור זיכרון
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

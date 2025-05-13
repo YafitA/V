@@ -1,0 +1,149 @@
+// קוד JACK לציור מיניוואן עם משתנים שמאפשרים הזזה, הגדלה והקטנה
+class Van {
+    field int x, y;        // מיקום הרכב
+    field int width;       // רוחב הרכב
+    field int height;      // גובה הרכב
+    field int wheelSize;   // גודל הגלגלים
+    field int minSize;     // גודל מינימלי של הרכב
+    field int maxSize;     // גודל מקסימלי של הרכב
+    
+    // בנאי
+    constructor Van new(int startX, int startY, int vanWidth, int vanHeight) {
+        let x = startX;
+        let y = startY;
+        let width = vanWidth;
+        let height = vanHeight;
+        let wheelSize = vanWidth / 8;
+        let minSize = 40;    // גודל מינימלי של המיניוואן
+        let maxSize = 300;   // גודל מקסימלי של המיניוואן
+        return this;
+    }
+    
+    // מתודה לציור המיניוואן
+    method void draw() {
+        // צייר את גוף הרכב (מלבן)
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        
+        // צייר את תא הנהג (החלק הקדמי)
+        do Screen.drawLine(x + (width / 3), y, x + (width / 3), y + (height / 2));
+        
+        // צייר את החלונות
+        do Screen.setColor(false);
+        // חלון קדמי (שמשה קדמית)
+        do Screen.drawRectangle(x + (width / 20), y + (height / 10), 
+                             x + (width / 3) - (width / 20), y + (height / 2) - (height / 10));
+        
+        // חלונות צד
+        do Screen.drawRectangle(x + (width / 3) + (width / 20), y + (height / 10),
+                             x + (width / 3) + (width / 3), y + (height / 2) - (height / 10));
+        
+        do Screen.drawRectangle(x + (width / 3) + (width / 3) + (width / 20), y + (height / 10),
+                             x + width - (width / 20), y + (height / 2) - (height / 10));
+        
+        // החזר לצבע שחור לגלגלים
+        do Screen.setColor(true);
+        
+        // צייר גלגלים
+        // גלגל קדמי (שמאל)
+        do Screen.drawCircle(x + (width / 4), y + height + (wheelSize / 2), wheelSize);
+        
+        // גלגל אחורי (ימין)
+        do Screen.drawCircle(x + width - (width / 4), y + height + (wheelSize / 2), wheelSize);
+        
+        return;
+    }
+    
+    // מתודה להזזת המיניוואן
+    method void move(int dx, int dy) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // עדכן מיקום
+        let x = x + dx;
+        let y = y + dy;
+        
+        // צייר במיקום החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה להגדלת המיניוואן
+    method void grow(int sizeChange) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // בדיקה שהגודל החדש לא יהיה גדול מדי
+        if ((width + sizeChange) < maxSize) {
+            // הגדל את הרוחב והגובה תוך שמירה על הפרופורציות
+            let width = width + sizeChange;
+            let height = height + (sizeChange / 2);
+            
+            // עדכן את גודל הגלגלים בהתאם
+            let wheelSize = width / 8;
+        }
+        
+        // צייר את המיניוואן בגודל החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה להקטנת המיניוואן
+    method void shrink(int sizeChange) {
+        // מחק את הציור הנוכחי
+        do erase();
+        
+        // בדיקה שהגודל החדש לא יהיה קטן מדי
+        if ((width - sizeChange) > minSize) {
+            // הקטן את הרוחב והגובה תוך שמירה על הפרופורציות
+            let width = width - sizeChange;
+            let height = height - (sizeChange / 2);
+            
+            // עדכן את גודל הגלגלים בהתאם
+            let wheelSize = width / 8;
+        }
+        
+        // צייר את המיניוואן בגודל החדש
+        do draw();
+        
+        return;
+    }
+    
+    // מתודה לשינוי גודל המיניוואן (חיובי להגדלה, שלילי להקטנה)
+    method void resize(int sizeChange) {
+        if (sizeChange > 0) {
+            do grow(sizeChange);
+        } else {
+            if (sizeChange < 0) {
+                do shrink(-sizeChange);  // הופך את המספר השלילי לחיובי
+            }
+        }
+        return;
+    }
+    
+    // מתודה למחיקת המיניוואן
+    method void erase() {
+        // שמור את מצב הצבע הנוכחי
+        
+        
+        // הגדר צבע לבן (false) למחיקה
+        do Screen.setColor(false);
+        
+        // מחק את גוף הרכב
+        do Screen.drawRectangle(x, y, x + width, y + height);
+        
+        // מחק את הגלגלים
+        do Screen.drawCircle(x + (width / 4), y + height + (wheelSize / 2), wheelSize);
+        do Screen.drawCircle(x + width - (width / 4), y + height + (wheelSize / 2), wheelSize);
+            
+        return;
+    }
+    
+    // מתודה לשחרור זיכרון
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}
