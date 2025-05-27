@@ -27,7 +27,8 @@ fn escape_symbol(sym string) string {
 
 fn tokenize(content string) []string {
     mut tokens := []string{}
-    mut pattern := r'(".*?")|(/\*.*?\*/)|(//.*?$)|\b\w+\b|[{}\(\)\[\].,;+\-*/&|<>=~]'
+    //mut pattern := r'(".*?")|(/\*.*?\*/)|(//.*?$)|\b\w+\b|[{}\(\)\[\].,;+\-*/&|<>=~]'
+    mut pattern := r'(".*?")|(/\*.*?\*/)|(//.*)|\b\w+\b|[\{\}\(\)\[\].,;+\-\*/&\|<>=~]'
     mut re := regex.regex_opt(pattern) or { panic(err) }
 
     for token in re.find_all_str(content) {
