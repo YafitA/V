@@ -25,7 +25,7 @@ struct JackTokenizer {
 mut:
 	input_text    string
 	tokens        []Token
-	current_token int
+	//current_token int
 }
 
 // Token struct
@@ -38,7 +38,7 @@ struct Token {
 fn new_tokenizer(input string) JackTokenizer {
 	mut tokenizer := JackTokenizer{
 		input_text: input
-		current_token: -1
+		//current_token: -1
 	}
 	tokenizer.tokenize()
 	return tokenizer

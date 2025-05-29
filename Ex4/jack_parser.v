@@ -26,6 +26,22 @@ fn new_compilation_engine_from_xml(tokens_xml string) CompilationEngine {
 	return engine
 }
 
+fn trim_single_spaces(s string) string {
+    mut result := s
+    
+    // Check if the string starts with a space and remove it
+    if result.len > 0 && result[0] == ` ` {
+        result = result[1..]
+    }
+    
+    // // Check if the string ends with a space and remove it
+    if result.len > 0 && result[result.len - 1] == ` ` {
+        result = result[..result.len - 1]
+    }
+    
+    return result
+}
+
 // Parse tokens from XML file
 fn (mut c CompilationEngine) parse_tokens_xml(xml_content string) {
 	lines := xml_content.split('\n')
@@ -45,7 +61,7 @@ fn (mut c CompilationEngine) parse_tokens_xml(xml_content string) {
 			}
 			
 			token_type := trimmed[1..first_close]
-			value := trimmed[first_close + 1..last_open].trim_space()
+			value := trim_single_spaces(trimmed[first_close + 1..last_open])
 			
 			// Unescape XML entities
 			unescaped_value := value.replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').replace('&quot;', '"')
@@ -189,7 +205,8 @@ fn (mut c CompilationEngine) compile_subroutine() {
 	
 	// ('void' | type)
 	if c.is_current('void') {
-		c.eat('void')
+		//c.eat('void')
+		c.write_current_token() 
 	} else {
 		c.compile_type()
 	}
@@ -458,18 +475,21 @@ fn (mut c CompilationEngine) compile_term() {
 			}
 		}
 		'identifier' {
-			c.write_current_token()
-			
-			// Check for array access or subroutine call
-			if c.is_current('[') {
+			mut next_token := c.tokens[c.current_token + 1].value // look ahead
+			// Check for array access 
+			if next_token == '[' {
+				c.write_current_token()
 				// Array access: varName '[' expression ']'
 				c.eat('[')
 				c.compile_expression()
 				c.eat(']')
-			} else if c.is_current('(') || c.is_current('.') {
+			} else if next_token == '(' || next_token == '.' {
 				// Subroutine call - need to backtrack
-				c.current_token-- // Go back to identifier
+				// c.current_token-- // Go back to identifier
 				c.compile_subroutine_call_in_term()
+			} else {
+				// Just an identifier
+				c.write_current_token()
 			}
 		}
 		'symbol' {
